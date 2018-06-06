@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <ul>
+        <li>111</li>
+        <li>222</li>
+        <li>3333</li>
+    </ul>
+    <script>
+        /*
+        * jQ整体是一个自调函数，
+        * 这个自调函数接收两个参数，第一个是全局对象，第二个是jQ的主体函数，
+        * 然后自调函数内间接调用了传入的主体函数，
+        * 主体函数对外暴露了两个全局变量$ 与 jQuery。
+        * */
+
+        // 1、整体自调
+        (function(global, factory){
+            factory( global );
+        })(window, function(window) {
+
+            // 缓存一些常用的方法，提高查找效率
+            var document = window.document;
+
+            var arr = [],
+                push = arr.push,
+                slice = arr.slice;
+
+            // 3、定义工厂函数
+            var jQuery = function(selector) {
+                return new jQuery.fn.init(selector);
+            }
+
+            // 4、给原型起一个简称，添加原型上添加一些核心成员
+            jQuery.fn = jQuery.prototype = {
+                construcotr: jQuery
+            }
+
+            // 5、定义构造函数，顺带把构造函数添加到工厂的原型中
+            var init = jQuery.fn.init = function(selector) {
+                [].push.apply(this, document.querySelectorAll(selector));
+            };
+
+            // 6、把构造函数的原型替换为工厂的原型，保持一致；
+            // 这样init实例就可以使用工厂原型的方法了
+            init.prototype = jQuery.fn;
+
+            // 7、添加一个组织整体结构的extend方法
+            jQuery.extend = jQuery.fn.extend = function() {
+                var arg = arguments, argLen = arg.length;
+                var i = 1, key;
+                var target = arg[0];
+
+                // 如果参数为1，copy给this
+                if(argLen === 1) {
+                    target = this;
+                    i = 0;
+                }
+
+                // 遍历每一个被copy的对象
+                for(; i < argLen; i++) {
+                    // 遍历得到对象的属性，copy给target
+                    for(key in arg[i]) {
+                        if(arg[i].hasOwnProperty(key)) {
+                            target[key] = arg[i][key];
+                        }
+                    }
+                }
+
+                return target;
+            };
+
+            // 2、主体函数暴露全局变量
+            window.jQuery = window.$ = jQuery;
+        });
+    </script>
+    <script>
+        console.log($('li'));
+    </script>
+</body>
+</html>
